@@ -5,6 +5,7 @@ import (
 	"net"
 	"strings"
 
+	tor "github.com/david415/oniondialer"
 	utp "github.com/jbenet/go-multiaddr-net/Godeps/_workspace/src/github.com/h2so5/utp"
 	ma "github.com/jbenet/go-multiaddr-net/Godeps/_workspace/src/github.com/jbenet/go-multiaddr"
 )
@@ -96,6 +97,23 @@ func FromNetAddr(a net.Addr) (ma.Multiaddr, error) {
 			return nil, errIncorrectNetAddr
 		}
 		return FromIP(ac.IP)
+
+	case "onion":
+		onionAddr, ok := a.(*tor.OnionAddr)
+		if !ok {
+			return nil, errIncorrectNetAddr
+		}
+
+		fields := strings.Split(onionAddr.String(), ":")
+		if len(fields) != 2 {
+			return nil, fmt.Errorf("invalid onion addr doesn't contain a port %v", onionAddr)
+		}
+		// Get Tor Onion Addr
+		onionm, err := ma.NewMultiaddr(fmt.Sprintf("/onion/%s:%s", fields[0], fields[1]))
+		if err != nil {
+			return nil, errIncorrectNetAddr
+		}
+		return onionm, nil
 
 	default:
 		return nil, fmt.Errorf("unknown network %v", a.Network())
