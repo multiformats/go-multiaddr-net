@@ -1,0 +1,11 @@
+{
+  "name": "go-multiaddr-net",
+  "version": "1.0.0",
+  "dependencies": [
+    {
+      "name": "go-udtwrapper",
+      "hash": "QmNkRNmcx3G1qTx2Ef62Fiqns4wnK1YafkhJt98rq3pX6z"
+    }
+  ],
+  "language": "go"
+}

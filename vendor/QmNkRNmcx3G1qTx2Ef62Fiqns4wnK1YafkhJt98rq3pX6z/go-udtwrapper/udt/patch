@@ -1,0 +1,80 @@
+diff --git a/udt/fd.go b/udt/fd.go
+index 54fb207..f41da7a 100644
+--- a/udt/fd.go
++++ b/udt/fd.go
+@@ -97,6 +97,7 @@ func (fd *udtFD) name() string {
+ }
+ 
+ func (fd *udtFD) setDefaultOpts() error {
++	return nil
+ 
+ 	// reduce maximum size
+ 	if C.udt_setsockopt(fd.sock, 0, C.UDP_RCVBUF, unsafe.Pointer(&UDP_RCVBUF_SIZE), C.sizeof_int) != 0 {
+diff --git a/udt/udt_test.go b/udt/udt_test.go
+index e2fe948..8305c65 100644
+--- a/udt/udt_test.go
++++ b/udt/udt_test.go
+@@ -19,6 +19,8 @@ func TestStressOps(t *testing.T) {
+ 	srcbuf := make([]byte, 50000)
+ 	rand.Read(srcbuf)
+ 
++	endmsg := []byte("test end")
++
+ 	numcons := 200
+ 	numloops := 5000
+ 
+@@ -42,6 +44,16 @@ func TestStressOps(t *testing.T) {
+ 					t.Fatal("wrote wrong amount")
+ 				}
+ 			}
++
++			// now read test end message
++			buf := make([]byte, len(endmsg))
++			_, err = io.ReadFull(con, buf)
++			if err != nil {
++				t.Fatal(err)
++			}
++			if !bytes.Equal(buf, endmsg) {
++				t.Fatal("got bad data")
++			}
+ 		}()
+ 	}
+ 
+@@ -58,8 +70,9 @@ func TestStressOps(t *testing.T) {
+ 			defer c.Close()
+ 			buf := make([]byte, 1024)
+ 			for i := 0; i < numloops; i++ {
+-				_, err := io.ReadFull(c, buf)
++				n, err := io.ReadFull(c, buf)
+ 				if err != nil {
++					t.Fatalf("read errored after %d bytes [loop %d]", n, i)
+ 					t.Fatal(err)
+ 				}
+ 
+@@ -67,6 +80,15 @@ func TestStressOps(t *testing.T) {
+ 					t.Fatal("read wrong data")
+ 				}
+ 			}
++
++			n, err := c.Write(endmsg)
++			if err != nil {
++				t.Fatal(err)
++			}
++
++			if n != len(endmsg) {
++				t.Fatal("wasnt able to correctly send response message")
++			}
+ 		}(c)
+ 	}
+ 
+diff --git a/udt4/src/udt_wrap.cpp b/udt4/src/udt_wrap.cpp
+index 01e8c4e..ca5d65d 100644
+--- a/udt4/src/udt_wrap.cpp
++++ b/udt4/src/udt_wrap.cpp
+@@ -189,4 +189,4 @@ int udt_perfmon(UDTSOCKET u, TRACEINFO* perf, int clear)
+ UDTSTATUS udt_getsockstate(UDTSOCKET u)
+ {
+     return UDT::getsockstate(u);
+-}
+\ No newline at end of file
++}

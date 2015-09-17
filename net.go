@@ -6,6 +6,8 @@ import (
 
 	// utp "github.com/jbenet/go-multiaddr-net/Godeps/_workspace/src/github.com/h2so5/utp"
 	ma "github.com/jbenet/go-multiaddr-net/Godeps/_workspace/src/github.com/jbenet/go-multiaddr"
+
+	udt "github.com/jbenet/go-multiaddr-net/vendor/go-udtwrapper-v1.0.0/udt"
 )
 
 // Conn is the equivalent of a net.Conn object. It is the
@@ -114,9 +116,15 @@ func (d *Dialer) Dial(remote ma.Multiaddr) (Conn, error) {
 		if err != nil {
 			return nil, err
 		}
+
+	case "udt", "udt4", "udt6":
+		nconn, err = udt.Dial(rnet, rnaddr)
+		if err != nil {
+			return nil, err
+		}
+
 	case "udp", "udp4", "udp6":
 		return nil, fmt.Errorf("utp is currently broken")
-
 		// // construct utp dialer, with options on our net.Dialer
 		// utpd := utp.Dialer{
 		// 	Timeout:   d.Dialer.Timeout,
@@ -232,6 +240,8 @@ func Listen(laddr ma.Multiaddr) (Listener, error) {
 	case "utp":
 		// nl, err = utp.Listen(lnet, lnaddr)
 		return nil, fmt.Errorf("utp is currently broken")
+	case "udt", "udt4", "udt6":
+		nl, err = udt.Listen(lnet, lnaddr)
 	default:
 		nl, err = net.Listen(lnet, lnaddr)
 	}

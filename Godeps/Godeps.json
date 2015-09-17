@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/jbenet/go-multiaddr-net",
-	"GoVersion": "go1.4.2",
+	"GoVersion": "go1.5",
 	"Packages": [
 		"./..."
 	],
@@ -14,6 +14,10 @@
 			"Rev": "568a28d73fd97651d3442392036a658b6976eed5"
 		},
 		{
+			"ImportPath": "github.com/jbenet/go-ctxgroup",
+			"Rev": "c14598396fa31465dc558b176c7976606f95a49d"
+		},
+		{
 			"ImportPath": "github.com/jbenet/go-multiaddr",
 			"Comment": "0.1.2-38-gc13f11b",
 			"Rev": "c13f11bbfe6439771f4df7bfb330f686826144e8"
@@ -24,8 +28,20 @@
 			"Rev": "87e53a9d2875a18a7863b351d22f912545e6b3a3"
 		},
 		{
+			"ImportPath": "github.com/jbenet/go-sockaddr",
+			"Rev": "da304f94eea1af8ba8d1faf184623e1f9d9777dc"
+		},
+		{
+			"ImportPath": "github.com/jbenet/go-udtwrapper/udt",
+			"Rev": "6c7976a7c32ac007915f4e7f3257e7106374723d"
+		},
+		{
 			"ImportPath": "golang.org/x/crypto/sha3",
 			"Rev": "1351f936d976c60a0a48d728281922cf63eafb8d"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "dfcbca9c45aeabb8971affa4f76b2d40f6f72328"
 		}
 	]
 }
