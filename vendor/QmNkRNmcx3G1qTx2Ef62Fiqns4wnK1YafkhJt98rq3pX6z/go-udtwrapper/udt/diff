@@ -1,0 +1,163 @@
+diff --git a/udt/fd.go b/udt/fd.go
+index 54fb207..d61a049 100644
+--- a/udt/fd.go
++++ b/udt/fd.go
+@@ -96,28 +96,6 @@ func (fd *udtFD) name() string {
+ 	return fd.net + ":" + ls + "->" + rs
+ }
+ 
+-func (fd *udtFD) setDefaultOpts() error {
+-
+-	// reduce maximum size
+-	if C.udt_setsockopt(fd.sock, 0, C.UDP_RCVBUF, unsafe.Pointer(&UDP_RCVBUF_SIZE), C.sizeof_int) != 0 {
+-		return fmt.Errorf("failed to set UDP_RCVBUF: %d, %s", UDP_RCVBUF_SIZE, lastError())
+-	}
+-
+-	// set UDT_REUSEADDR
+-	trueint := C.int(1)
+-	if C.udt_setsockopt(fd.sock, 0, C.UDT_REUSEADDR, unsafe.Pointer(&trueint), C.sizeof_int) != 0 {
+-		return fmt.Errorf("failed to set UDT_REUSEADDR: %s", lastError())
+-	}
+-
+-	// unset UDT_LINGER
+-	// falseint := C.int(0)
+-	// if C.udt_setsockopt(fd.sock, 0, C.UDT_LINGER, unsafe.Pointer(&falseint), C.sizeof_int) != 0 {
+-	// 	return fmt.Errorf("failed to set UDT_LINGER: %s", lastError())
+-	// }
+-
+-	return nil
+-}
+-
+ func (fd *udtFD) bind() error {
+ 	_, sa, salen, err := fd.laddr.socketArgs()
+ 	if err != nil {
+@@ -276,11 +254,6 @@ func dialFD(laddr, raddr *UDTAddr) (*udtFD, error) {
+ 		return nil, err
+ 	}
+ 
+-	if err := fd.setDefaultOpts(); err != nil {
+-		fd.Close()
+-		return nil, err
+-	}
+-
+ 	if laddr != nil {
+ 		if err := fd.bind(); err != nil {
+ 			fd.Close()
+@@ -314,11 +287,6 @@ func listenFD(laddr *UDTAddr) (*udtFD, error) {
+ 		return nil, err
+ 	}
+ 
+-	if err := fd.setDefaultOpts(); err != nil {
+-		fd.Close()
+-		return nil, err
+-	}
+-
+ 	if err := fd.bind(); err != nil {
+ 		fd.Close()
+ 		return nil, err
+diff --git a/udt/fd_test.go b/udt/fd_test.go
+index 75b7611..1088919 100644
+--- a/udt/fd_test.go
++++ b/udt/fd_test.go
+@@ -48,10 +48,6 @@ func TestUdtFDConstruct(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ 
+-	if err := fd.setDefaultOpts(); err != nil {
+-		t.Fatal(err)
+-	}
+-
+ 	if fd.name() != "udt::1234->" {
+ 		t.Fatal("incorrect name:", fd.name())
+ 	}
+@@ -115,8 +111,6 @@ func TestUdtFDListenOnly(t *testing.T) {
+ 	assert(t, nil == err, err)
+ 	fd, err := newFD(s, la, nil, "udt")
+ 	assert(t, nil == err, err)
+-	err = fd.setDefaultOpts()
+-	assert(t, nil == err, err)
+ 
+ 	if err := fd.listen(10); err == nil {
+ 		t.Fatal("should fail. must bind first")
+@@ -149,10 +143,6 @@ func TestUdtFDAcceptAndConnect(t *testing.T) {
+ 	assert(t, nil == err, err)
+ 	fdc, err := newFD(sc, nil, nil, "udt")
+ 	assert(t, nil == err, err)
+-	err = fdl.setDefaultOpts()
+-	assert(t, nil == err, err)
+-	err = fdc.setDefaultOpts()
+-	assert(t, nil == err, err)
+ 	err = fdl.bind()
+ 	assert(t, nil == err, err)
+ 	err = fdl.listen(10)
+@@ -213,8 +203,6 @@ func TestUdtFDAcceptAndDialFD(t *testing.T) {
+ 	assert(t, nil == err, err)
+ 	fdl, err := newFD(sl, al, nil, "udt")
+ 	assert(t, nil == err, err)
+-	err = fdl.setDefaultOpts()
+-	assert(t, nil == err, err)
+ 	err = fdl.bind()
+ 	assert(t, nil == err, err)
+ 	err = fdl.listen(10)
+diff --git a/udt/udt_test.go b/udt/udt_test.go
+index edcd4a2..737a415 100644
+--- a/udt/udt_test.go
++++ b/udt/udt_test.go
+@@ -20,8 +20,10 @@ func TestStressOps(t *testing.T) {
+ 	srcbuf := make([]byte, 50000)
+ 	rand.Read(srcbuf)
+ 
+-	numcons := 200
+-	numloops := 5000
++	endmsg := []byte("test end")
++
++	numcons := 100
++	numloops := 4000
+ 
+ 	var wg sync.WaitGroup
+ 	for i := 0; i < numcons; i++ {
+@@ -45,6 +47,16 @@ func TestStressOps(t *testing.T) {
+ 			}
+ 
+ 			fmt.Printf("%d/%d done sending\n", nc, numcons)
++
++			// now read test end message
++			buf := make([]byte, len(endmsg))
++			_, err = io.ReadFull(con, buf)
++			if err != nil {
++				t.Fatal(err)
++			}
++			if !bytes.Equal(buf, endmsg) {
++				t.Fatal("got bad data")
++			}
+ 		}(i)
+ 	}
+ 
+@@ -61,9 +73,9 @@ func TestStressOps(t *testing.T) {
+ 			defer c.Close()
+ 			buf := make([]byte, 1024)
+ 			for i := 0; i < numloops; i++ {
+-				_, err := io.ReadFull(c, buf)
++				n, err := io.ReadFull(c, buf)
+ 				if err != nil {
+-					t.Fatal(err)
++					t.Fatalf("read errored after %d bytes [loop %d]: %s", n, i, err)
+ 				}
+ 
+ 				if !bytes.Equal(buf, srcbuf[i:i+1024]) {
+@@ -72,6 +84,15 @@ func TestStressOps(t *testing.T) {
+ 			}
+ 
+ 			fmt.Printf("%d/%d done receiving\n", nc, numcons)
++
++			n, err := c.Write(endmsg)
++			if err != nil {
++				t.Fatal(err)
++			}
++
++			if n != len(endmsg) {
++				t.Fatal("wasnt able to correctly send response message")
++			}
+ 		}(i, c)
+ 	}
+ 
