@@ -3,8 +3,10 @@ package manet
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 
+	tor "github.com/david415/oniondialer"
 	utp "github.com/jbenet/go-multiaddr-net/Godeps/_workspace/src/github.com/h2so5/utp"
 	ma "github.com/jbenet/go-multiaddr-net/Godeps/_workspace/src/github.com/jbenet/go-multiaddr"
 )
@@ -97,6 +99,23 @@ func FromNetAddr(a net.Addr) (ma.Multiaddr, error) {
 		}
 		return FromIP(ac.IP)
 
+	case "onion":
+		onionAddr, ok := a.(*tor.OnionAddr)
+		if !ok {
+			return nil, errIncorrectNetAddr
+		}
+
+		fields := strings.Split(onionAddr.String(), ":")
+		if len(fields) != 2 {
+			return nil, fmt.Errorf("invalid onion addr doesn't contain a port %v", onionAddr)
+		}
+		// Get Tor Onion Addr
+		onionm, err := ma.NewMultiaddr(fmt.Sprintf("/onion/%s:%s", fields[0], fields[1]))
+		if err != nil {
+			return nil, errIncorrectNetAddr
+		}
+		return onionm, nil
+
 	default:
 		return nil, fmt.Errorf("unknown network %v", a.Network())
 	}
@@ -139,12 +158,22 @@ func FromIP(ip net.IP) (ma.Multiaddr, error) {
 
 // DialArgs is a convenience function returning arguments for use in net.Dial
 func DialArgs(m ma.Multiaddr) (string, string, error) {
-	if !IsThinWaist(m) {
-		return "", "", fmt.Errorf("%s is not a 'thin waist' address", m)
-	}
-
 	str := m.String()
 	parts := strings.Split(str, "/")[1:]
+
+	switch parts[0] {
+	case "onion":
+		addr := strings.Split(parts[1], ":")
+		if len(addr) != 2 {
+			return "", "", fmt.Errorf("failed to parse addr %s: does not contain a port number.", str)
+		}
+		onionHost := addr[0] + ".onion"
+		onionPort, err := strconv.Atoi(addr[1])
+		if err != nil {
+			return "", "", fmt.Errorf("failed to parse addr %s: invalid port number", str)
+		}
+		return "onion", fmt.Sprintf("%s:%s", onionHost, onionPort), nil
+	}
 
 	if len(parts) == 2 { // only IP
 		return parts[0], parts[1], nil

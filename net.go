@@ -5,6 +5,7 @@ import (
 	"net"
 
 	// utp "github.com/jbenet/go-multiaddr-net/Godeps/_workspace/src/github.com/h2so5/utp"
+	tor "github.com/david415/oniondialer"
 	ma "github.com/jbenet/go-multiaddr-net/Godeps/_workspace/src/github.com/jbenet/go-multiaddr"
 )
 
@@ -88,18 +89,18 @@ type Dialer struct {
 // remote Multiaddrs).
 func (d *Dialer) Dial(remote ma.Multiaddr) (Conn, error) {
 
-	// if a LocalAddr is specified, use it on the embedded dialer.
-	if d.LocalAddr != nil {
-		// convert our multiaddr to net.Addr friendly
-		naddr, err := ToNetAddr(d.LocalAddr)
-		if err != nil {
-			return nil, err
+	if IsThinWaist(remote) {
+		// if a LocalAddr is specified, use it on the embedded dialer.
+		if d.LocalAddr != nil {
+			// convert our multiaddr to net.Addr friendly
+			naddr, err := ToNetAddr(d.LocalAddr)
+			if err != nil {
+				return nil, err
+			}
+			// set the dialer's LocalAddr as naddr
+			d.Dialer.LocalAddr = naddr
 		}
-
-		// set the dialer's LocalAddr as naddr
-		d.Dialer.LocalAddr = naddr
 	}
-
 	// get the net.Dial friendly arguments from the remote addr
 	rnet, rnaddr, err := DialArgs(remote)
 	if err != nil {
@@ -127,6 +128,21 @@ func (d *Dialer) Dial(remote ma.Multiaddr) (Conn, error) {
 		// if err != nil {
 		// 	return nil, err
 		// }
+	case "onion":
+		// XXX fix me. do not want hard coded values. needs user specified parameters.
+		torDialer, err := tor.NewTorDialer("tcp", "127.0.0.1:9050", nil)
+		if err != nil {
+			return nil, err
+		}
+		nconn, err = torDialer.Dial(rnet, rnaddr)
+		if err != nil {
+			return nil, err
+		}
+		return &maConn{
+			Conn:  nconn,
+			laddr: d.LocalAddr,
+			raddr: remote,
+		}, nil
 	}
 
 	// get local address (pre-specified or assigned within net.Conn)
