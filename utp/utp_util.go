@@ -85,20 +85,33 @@ func (u *Listener) Addr() net.Addr {
 	return MakeAddr(u.Socket.Addr())
 }
 
+// return a dialer object that allows you to dial out on the same
+// socket youre listening on
+func (u *Listener) Dialer() *Dialer {
+	return &Dialer{
+		s: u.Socket,
+	}
+}
+
 type Dialer struct {
 	Timeout   time.Duration
 	LocalAddr net.Addr
+	s         *utp.Socket
 }
 
 func (d *Dialer) Dial(rnet string, raddr string) (net.Conn, error) {
-	if d.LocalAddr != nil {
+	if d.LocalAddr != nil && d.s == nil {
 		s, err := utp.NewSocket(d.LocalAddr.Network(), d.LocalAddr.String())
 		if err != nil {
 			return nil, err
 		}
 
+		d.s = s
+	}
+
+	if d.s != nil {
 		// zero timeout is the same as calling s.Dial()
-		return s.DialTimeout(raddr, d.Timeout)
+		return d.s.DialTimeout(raddr, d.Timeout)
 	}
 
 	return utp.DialTimeout(raddr, d.Timeout)
