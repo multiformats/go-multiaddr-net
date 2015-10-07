@@ -109,10 +109,18 @@ func (d *Dialer) Dial(rnet string, raddr string) (net.Conn, error) {
 		d.s = s
 	}
 
+	var c net.Conn
+	var err error
 	if d.s != nil {
 		// zero timeout is the same as calling s.Dial()
-		return d.s.DialTimeout(raddr, d.Timeout)
+		c, err = d.s.DialTimeout(raddr, d.Timeout)
+	} else {
+		c, err = utp.DialTimeout(raddr, d.Timeout)
 	}
 
-	return utp.DialTimeout(raddr, d.Timeout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Conn{c}, nil
 }
