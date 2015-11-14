@@ -1,19 +1,14 @@
+GO15VENDOREXPERIMENT=1
+
 all: install
 
-godep:
-	go get github.com/tools/godep
+gx:
+	go get github.com/whyrusleeping/gx
+	go get github.com/whyrusleeping/gx-go
 
-# saves/vendors third-party dependencies to Godeps/_workspace
-# -r flag rewrites import paths to use the vendored path
-# ./... performs operation on all packages in tree
-vendor: godep
-	godep save -r ./...
+dep: gx
+	gx install
 
-install: dep
-	cd multiaddr && go install
+test: 
+	go test -race -cpu=5 -v
 
-test:
-	go test -race -cpu=5 -v ./...
-
-dep:
-	cd multiaddr && go get ./...

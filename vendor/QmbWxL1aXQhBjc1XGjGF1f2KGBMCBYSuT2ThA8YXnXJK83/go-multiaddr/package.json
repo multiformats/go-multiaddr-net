@@ -1,0 +1,16 @@
+{
+  "name": "go-multiaddr",
+  "author": "whyrusleeping",
+  "version": "1.0.0",
+  "gxDependencies": [
+    {
+      "name": "go-multihash",
+      "hash": "QmdsKjp5fcCT8PZ8JBMcdFsCbbmKwSLCU5xXbsnwb5DMxy",
+      "version": "1.0.0"
+    }
+  ],
+  "language": "go",
+  "gx": {
+    "dvcsimport": "github.com/jbenet/go-multiaddr"
+  }
+}

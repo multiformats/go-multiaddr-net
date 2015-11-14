@@ -1,0 +1,9 @@
+{
+  "name": "go-base58",
+  "author": "whyrusleeping",
+  "version": "1.0.0",
+  "language": "go",
+  "gx": {
+    "dvcsimport": "github.com/jbenet/go-base58"
+  }
+}

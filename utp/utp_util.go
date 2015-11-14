@@ -5,7 +5,7 @@ import (
 	"net"
 	"time"
 
-	utp "github.com/jbenet/go-multiaddr-net/Godeps/_workspace/src/github.com/anacrolix/utp"
+	utp "QmVBEPpwYNGb5xQW6jPzYgV86KSPRrzhe4hA7o7mtAHZsT/go-utp"
 )
 
 type Listener struct {
