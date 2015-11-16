@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	ma "github.com/jbenet/go-multiaddr-net/Godeps/_workspace/src/github.com/jbenet/go-multiaddr"
+	ma "QmbWxL1aXQhBjc1XGjGF1f2KGBMCBYSuT2ThA8YXnXJK83/go-multiaddr"
 	mautp "github.com/jbenet/go-multiaddr-net/utp"
 )
 

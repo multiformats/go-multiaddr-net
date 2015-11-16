@@ -1,0 +1,21 @@
+{
+  "name": "go-multihash",
+  "author": "whyrusleeping",
+  "version": "1.0.0",
+  "gxDependencies": [
+    {
+      "name": "go-base58",
+      "hash": "QmNsoHoCVhgXcv1Yg45jtkMgimxorTAN36fV9AQMFXHHAQ",
+      "version": "1.0.0"
+    },
+    {
+      "name": "crypto-sha3",
+      "hash": "QmSQRViqskLPYFbjKhWE5EaW8eou9SD2j52QaBkQdigMsG",
+      "version": "1.0.0"
+    }
+  ],
+  "language": "go",
+  "gx": {
+    "dvcsimport": "github.com/jbenet/go-multihash"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "go-utp",
+  "author": "whyrusleeping",
+  "version": "1.0.0",
+  "gxDependencies": [
+    {
+      "name": "jitter",
+      "hash": "QmbDXAJ4Fzpmqw9kTVPtPGZEsgyn33ipbUQEe8vMUZLnTS",
+      "version": "1.0.0"
+    },
+    {
+      "name": "envpprof",
+      "hash": "QmWsa476RGjb9scWzcRVts3QZsYjU5Kt6Y9qe8Q3vc5FHR",
+      "version": "1.0.0"
+    }
+  ],
+  "language": "go",
+  "gx": {
+    "dvcsimport": "github.com/anacrolix/utp"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "go-multiaddr-net",
+  "author": "whyrusleeping",
+  "version": "1.0.0",
+  "gxDependencies": [
+    {
+      "name": "go-utp",
+      "hash": "QmVBEPpwYNGb5xQW6jPzYgV86KSPRrzhe4hA7o7mtAHZsT",
+      "version": "1.0.0"
+    },
+    {
+      "name": "go-multiaddr",
+      "hash": "QmbWxL1aXQhBjc1XGjGF1f2KGBMCBYSuT2ThA8YXnXJK83",
+      "version": "1.0.0"
+    },
+    {
+      "name": "go-multihash",
+      "hash": "QmdsKjp5fcCT8PZ8JBMcdFsCbbmKwSLCU5xXbsnwb5DMxy",
+      "version": "1.0.0"
+    }
+  ],
+  "language": "go",
+  "gx": {
+    "dvcsimport": "github.com/jbenet/go-multiaddr-net"
+  }
+}
