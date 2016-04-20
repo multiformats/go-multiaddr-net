@@ -1,0 +1,11 @@
+{
+  "name": "go-multiaddr-net",
+  "author": "jbenet",
+  "version": "0.0.0",
+  "language": "go",
+  "issues_url": "",
+  "gx_version": "0.3.0",
+  "gx": {
+    "dvcsimport": "github.com/jbenet/go-multiaddr-net"
+  }
+}
