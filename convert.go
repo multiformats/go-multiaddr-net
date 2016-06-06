@@ -162,7 +162,7 @@ func parseUtpNetAddr(a net.Addr) (ma.Multiaddr, error) {
 	}
 
 	// Get UDP Addr
-	ac, ok := acc.Child().(*net.UDPAddr)
+	ac, err := net.ResolveUDPAddr("udp", acc.Child().String())
 	if !ok {
 		return nil, errIncorrectNetAddr
 	}
