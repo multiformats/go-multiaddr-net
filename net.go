@@ -13,12 +13,59 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 )
 
+type PacketConn interface {
+	net.PacketConn
+	ConnWrap
+}
+
+type UDPConn struct {
+	*net.UDPConn
+	maWrap
+}
+
+func ListenUDP(laddr ma.Multiaddr) (*UDPConn, error) {
+	network, netaddr, err := DialArgs(laddr)
+	if err != nil {
+		return nil, err
+	}
+
+	udpaddr, err := net.ResolveUDPAddr(network, netaddr)
+	if err != nil {
+		return nil, err
+	}
+
+	netconn, err := net.ListenUDP(network, udpaddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return WrapUDPConn(netconn, laddr)
+}
+
+func WrapUDPConn(netconn *net.UDPConn, laddr ma.Multiaddr) (*UDPConn, error) {
+	if laddr == nil {
+		addr, err := FromNetAddr(netconn.LocalAddr())
+		if err != nil {
+			return nil, err
+		}
+		laddr = addr
+	}
+
+	return &UDPConn{
+		UDPConn: netconn,
+		maWrap:  maWrap{laddr: laddr},
+	}, nil
+}
+
 // Conn is the equivalent of a net.Conn object. It is the
 // result of calling the Dial or Listen functions in this
 // package, with associated local and remote Multiaddrs.
 type Conn interface {
 	net.Conn
+	ConnWrap
+}
 
+type ConnWrap interface {
 	// LocalMultiaddr returns the local Multiaddr associated
 	// with this connection
 	LocalMultiaddr() ma.Multiaddr
@@ -27,6 +74,14 @@ type Conn interface {
 	// with this connection
 	RemoteMultiaddr() ma.Multiaddr
 }
+
+type maWrap struct {
+	laddr ma.Multiaddr
+	raddr ma.Multiaddr
+}
+
+func (w *maWrap) LocalMultiaddr() ma.Multiaddr  { return w.laddr }
+func (w *maWrap) RemoteMultiaddr() ma.Multiaddr { return w.raddr }
 
 // WrapNetConn wraps a net.Conn object with a Multiaddr
 // friendly Conn.
@@ -46,9 +101,11 @@ func WrapNetConn(nconn net.Conn) (Conn, error) {
 	}
 
 	return &maConn{
-		Conn:  nconn,
-		laddr: laddr,
-		raddr: raddr,
+		Conn: nconn,
+		maWrap: maWrap{
+			laddr: laddr,
+			raddr: raddr,
+		},
 	}, nil
 }
 
@@ -56,20 +113,7 @@ func WrapNetConn(nconn net.Conn) (Conn, error) {
 // around a net.Conn
 type maConn struct {
 	net.Conn
-	laddr ma.Multiaddr
-	raddr ma.Multiaddr
-}
-
-// LocalMultiaddr returns the local address associated with
-// this connection
-func (c *maConn) LocalMultiaddr() ma.Multiaddr {
-	return c.laddr
-}
-
-// RemoteMultiaddr returns the remote address associated with
-// this connection
-func (c *maConn) RemoteMultiaddr() ma.Multiaddr {
-	return c.raddr
+	maWrap
 }
 
 // Dialer contains options for connecting to an address. It
@@ -137,9 +181,11 @@ func (d *Dialer) DialContext(ctx context.Context, remote ma.Multiaddr) (Conn, er
 	}
 
 	return &maConn{
-		Conn:  nconn,
-		laddr: local,
-		raddr: remote,
+		Conn: nconn,
+		maWrap: maWrap{
+			laddr: local,
+			raddr: remote,
+		},
 	}, nil
 }
 
@@ -197,9 +243,11 @@ func (l *maListener) Accept() (Conn, error) {
 	}
 
 	return &maConn{
-		Conn:  nconn,
-		laddr: l.laddr,
-		raddr: raddr,
+		Conn: nconn,
+		maWrap: maWrap{
+			laddr: l.laddr,
+			raddr: raddr,
+		},
 	}, nil
 }
 
