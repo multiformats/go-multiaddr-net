@@ -3,7 +3,7 @@ os:
 
 language: go
 
-sudo: false
+sudo: true
 
 go:
   - 1.7
