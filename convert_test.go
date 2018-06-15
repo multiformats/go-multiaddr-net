@@ -141,4 +141,7 @@ func TestDialArgs(t *testing.T) {
 	test("/ip4/127.0.0.1/tcp/4321", "tcp4", "127.0.0.1:4321")
 	test("/ip6/::1/udp/1234", "udp6", "[::1]:1234")
 	test("/ip6/::1/tcp/4321", "tcp6", "[::1]:4321")
+	// below tests rely on /etc/hosts containing default 'localhost' entries
+	test("/dns4/localhost/tcp/5001", "tcp4", "127.0.0.1:5001")
+	test("/dns6/localhost/tcp/5001", "tcp6", "[::1]:5001")
 }

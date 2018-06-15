@@ -12,6 +12,12 @@
       "hash": "QmUxSEGbv2nmYNnfXi7839wwQqTN3kwQeUxe8dTjZWZs7J",
       "name": "go-multiaddr",
       "version": "1.2.7"
+    },
+    {
+      "author": "lgierth",
+      "hash": "QmT8461vVVyBPyHJHQ6mvm8UdQ8UZNA5n6Z7kBk7GRf1xu",
+      "name": "go-multiaddr-dns",
+      "version": "0.2.3"
     }
   ],
   "gxVersion": "0.6.0",

@@ -1,11 +1,13 @@
 package manet
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strings"
 
 	ma "github.com/multiformats/go-multiaddr"
+	madns "github.com/multiformats/go-multiaddr-dns"
 )
 
 var errIncorrectNetAddr = fmt.Errorf("incorrect network addr conversion")
@@ -80,6 +82,13 @@ func FromIP(ip net.IP) (ma.Multiaddr, error) {
 
 // DialArgs is a convenience function returning arguments for use in net.Dial
 func DialArgs(m ma.Multiaddr) (string, string, error) {
+	if madns.Matches(m) {
+		resolvedMAddrs, err := madns.Resolve(context.TODO(), m)
+		if err != nil {
+			return "", "", err
+		}
+		m = resolvedMAddrs[0]
+	}
 	// TODO: find a 'good' way to eliminate the function.
 	// My preference is with a multiaddr.Format(...) function
 	if !IsThinWaist(m) {
