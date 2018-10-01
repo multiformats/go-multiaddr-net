@@ -1,7 +1,7 @@
 package manet
 
 import (
-	"bytes"
+	"net"
 
 	ma "github.com/multiformats/go-multiaddr"
 )
@@ -23,14 +23,6 @@ var (
 	IP4Unspecified = ma.StringCast("/ip4/0.0.0.0")
 	IP6Unspecified = ma.StringCast("/ip6/::")
 )
-
-// Loopback multiaddr prefixes. Any multiaddr beginning with one of the
-// following byte sequences is considered a loopback multiaddr.
-var loopbackPrefixes = [][]byte{
-	{ma.P_IP4, 127}, // 127.*
-	{ma.P_IP6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 127}, // ::ffff:127.*
-	IP6Loopback.Bytes(), // ::1
-}
 
 // IsThinWaist returns whether a Multiaddr starts with "Thin Waist" Protocols.
 // This means: /{IP4, IP6}[/{TCP, UDP}]
@@ -63,21 +55,30 @@ func IsThinWaist(m ma.Multiaddr) bool {
 // This means either /ip4/127.*.*.*, /ip6/::1, or /ip6/::ffff:127.*.*.*.*
 func IsIPLoopback(m ma.Multiaddr) bool {
 	b := m.Bytes()
-	for _, prefix := range loopbackPrefixes {
-		if bytes.HasPrefix(b, prefix) {
-			return true
+	switch len(b) {
+	case net.IPv4len + 1:
+		if b[0] != ma.P_IP4 {
+			return false
 		}
+	case net.IPv6len + 1:
+		if b[0] != ma.P_IP6 {
+			return false
+		}
+	default:
+		return false
 	}
-	return false
+	return net.IP(b[1:]).IsLoopback()
 }
 
 // IsIP6LinkLocal returns if a multiaddress is an IPv6 local link. These
-// addresses are non routable. The prefix is technically
-// fe80::/10, but we test fe80::/16 for simplicity (no need to mask).
-// So far, no hardware interfaces exist long enough to use those 2 bits.
-// Send a PR if there is.
+// addresses are non routable.
 func IsIP6LinkLocal(m ma.Multiaddr) bool {
-	return bytes.HasPrefix(m.Bytes(), []byte{ma.P_IP6, 0xfe, 0x80})
+	b := m.Bytes()
+	if len(b) != (1+net.IPv6len) || b[0] != ma.P_IP6 {
+		return false
+	}
+	ip := net.IP(b[1:])
+	return ip.IsLinkLocalMulticast() || ip.IsLinkLocalUnicast()
 }
 
 // IsIPUnspecified returns whether a Multiaddr is am Unspecified IP address
