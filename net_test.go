@@ -363,7 +363,7 @@ func TestIPUnspecified(t *testing.T) {
 
 func TestIP6LinkLocal(t *testing.T) {
 	for a := 0; a < 65536; a++ {
-		isLinkLocal := (a == 0xfe80)
+		isLinkLocal := (a&0xffc0 == 0xfe80 || a&0xff0f == 0xff02)
 		m := newMultiaddr(t, fmt.Sprintf("/ip6/%x::1", a))
 		if IsIP6LinkLocal(m) != isLinkLocal {
 			t.Errorf("IsIP6LinkLocal failed (%s != %v)", m, isLinkLocal)
