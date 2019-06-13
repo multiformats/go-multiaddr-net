@@ -6,26 +6,34 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 )
 
-// Private4 and Private6 are well-known private networks
-var Private4, Private6 []*net.IPNet
-var privateCIDR4 = []string{
+// Private4, Private6, Local4, and Local6 are well-known private networks
+var Private4, Private6, Local4, Local6 []*net.IPNet
+
+var localCIDR4 = []string{
 	// localhost
 	"127.0.0.0/8",
+	// link local
+	"169.254.0.0/16",
+}
+
+var privateCIDR4 = []string{
 	// private networks
 	"10.0.0.0/8",
 	"100.64.0.0/10",
 	"172.16.0.0/12",
 	"192.168.0.0/16",
-	// link local
-	"169.254.0.0/16",
 }
-var privateCIDR6 = []string{
+
+var localCIDR6 = []string{
 	// localhost
 	"::1/128",
-	// ULA reserved
-	"fc00::/7",
 	// link local
 	"fe80::/10",
+}
+
+var privateCIDR6 = []string{
+	// ULA reserved
+	"fc00::/7",
 }
 
 // Unroutable4 and Unroutable6 are well known unroutable address ranges
@@ -47,6 +55,10 @@ var unroutableCIDR6 = []string{
 }
 
 func init() {
+	privateCIDR4 = append(privateCIDR4, localCIDR4...)
+	privateCIDR6 = append(privateCIDR6, localCIDR6...)
+	Local4 = parseCIDR(localCIDR4)
+	Local6 = parseCIDR(localCIDR6)
 	Private4 = parseCIDR(privateCIDR4)
 	Private6 = parseCIDR(privateCIDR6)
 	Unroutable4 = parseCIDR(unroutableCIDR4)
@@ -103,6 +115,25 @@ func IsPrivateAddr(a ma.Multiaddr) bool {
 		return false
 	})
 	return isPrivate
+}
+
+// IsLocalAddr returns true if the IP part of the mutiaddr is a loopback or link-local address
+func IsLocalAddr(a ma.Multiaddr) bool {
+	isLocal := false
+	ma.ForEach(a, func(c ma.Component) bool {
+		switch c.Protocol().Code {
+		case ma.P_IP6ZONE:
+			return true
+		default:
+			return false
+		case ma.P_IP4:
+			isLocal = inAddrRange(net.IP(c.RawValue()), Local4)
+		case ma.P_IP6:
+			isLocal = inAddrRange(net.IP(c.RawValue()), Local6)
+		}
+		return false
+	})
+	return isLocal
 }
 
 func inAddrRange(ip net.IP, ipnets []*net.IPNet) bool {

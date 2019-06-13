@@ -45,4 +45,21 @@ func TestIsPublicAddr(t *testing.T) {
 	if IsPrivateAddr(a) {
 		t.Fatal("shouldn't consider an address that starts with /tcp/ as *private*")
 	}
+
+	a, err = ma.NewMultiaddr("/ip4/127.0.0.1/tcp/80")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if IsPublicAddr(a) {
+		t.Fatal("shouldn't consider loopback address public")
+	}
+
+	if !IsPrivateAddr(a) {
+		t.Fatal("loopback address should be considered private")
+	}
+
+	if !IsLocalAddr(a) {
+		t.Fatal("loopback address should be considered local!")
+	}
 }
