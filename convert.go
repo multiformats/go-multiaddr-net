@@ -106,11 +106,7 @@ func ToIP(addr ma.Multiaddr) (net.IP, error) {
 	}
 
 	if hostname {
-		addr, err := net.ResolveIPAddr(network, ip)
-		if err != nil {
-			return nil, err
-		}
-		return addr.IP, nil
+		return nil, fmt.Errorf("non IP Multiaddr: %s %s", network, ip)
 	}
 	switch network {
 	case "ip", "ip4", "ip6", "tcp", "tcp4", "tcp6", "udp", "udp4", "udp6":
