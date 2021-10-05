@@ -22,9 +22,9 @@ func NewCodecMap() *CodecMap {
 }
 
 // Deprecated: use github.com/multiformats/go-multiaddr/net
-type NetCodec = upstream.NetCodec
+// type NetCodec = upstream.NetCodec
 
 // Deprecated: use github.com/multiformats/go-multiaddr/net
-func RegisterNetCodec(a *NetCodec) {
-	upstream.RegisterNetCodec(a)
-}
+// func RegisterNetCodec(a *NetCodec) {
+//	upstream.RegisterNetCodec(a)
+// }
